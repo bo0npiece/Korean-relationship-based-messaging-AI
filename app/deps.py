@@ -4,10 +4,15 @@ import hmac
 from fastapi import Header, HTTPException, Request
 
 from .config import Settings
+from .hcx import HCXClient
 
 
 def get_settings(request: Request) -> Settings:
     return request.app.state.settings
+
+
+def get_hcx(request: Request) -> HCXClient:
+    return request.app.state.hcx
 
 
 async def require_team_key(request: Request, x_team_key: str = Header(default="")):

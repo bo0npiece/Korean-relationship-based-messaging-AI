@@ -30,6 +30,17 @@ powershell -ExecutionPolicy Bypass -File scripts\start.ps1
 
 실제 API를 호출하려면 `.env`에 `CLOVA_API_KEY`를 넣고 `MOCK_MODE=0`으로 바꿉니다. 키가 비어 있으면 `MOCK_MODE` 값과 상관없이 MOCK으로 동작합니다.
 
+## 실제 API 연결 확인
+
+`.env`에 키를 넣고 `MOCK_MODE=0`으로 바꾼 뒤 실행합니다. 대화, Structured Outputs, 임베딩 3종을 아주 짧게 호출합니다.
+
+```powershell
+.venv\Scripts\python.exe scripts\smoke_test.py
+.venv\Scripts\python.exe scripts\smoke_test.py --image 캡처.png   # 이미지 읽기까지
+```
+
+모든 호출(MOCK·캐시 포함)은 `data/usage_log.jsonl`에 기능명·모델·토큰·지연시간이 기록됩니다.
+
 ## 테스트
 
 ```powershell
