@@ -1,13 +1,18 @@
 """FastAPI 앱 조립. 실행: uvicorn app.main:app"""
+from pathlib import Path
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from .config import Settings
 from .core import Core
 from .customize import CustomizeError
 from .hcx import HCXError
 from .routes import coach, contacts, domain, health, messages, rehearsal, system
+
+WEB_DIR = Path(__file__).resolve().parent.parent / "web"
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -41,10 +46,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(rehearsal.router)
     app.include_router(system.router)
 
+    # 데모 화면 (web/ 폴더를 정적 파일로 서빙)
+    app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
+
     @app.get("/", include_in_schema=False)
     async def index():
-        # Step 10 전까지는 API 문서로 이동
-        return RedirectResponse("/docs")
+        return FileResponse(WEB_DIR / "index.html")
 
     return app
 

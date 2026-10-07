@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>메시지 코치</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">💬</span>
+      <div>
+        <h1 id="service-name">메시지 코치</h1>
+        <p id="service-target" class="muted"></p>
+      </div>
+    </div>
+    <div class="top-right">
+      <span id="mode-badge" class="badge">확인 중…</span>
+      <details class="team-key">
+        <summary>팀 키</summary>
+        <input id="team-key" type="password" placeholder="X-Team-Key (설정한 경우만)">
+      </details>
+    </div>
+  </header>
+
+  <!-- 자유 입력 → 기능 자동 연결 -->
+  <section class="router card">
+    <input id="route-input" placeholder="무엇을 도와드릴까요? 예) 교수님께 받은 문자가 무슨 뜻인지 모르겠어요">
+    <button id="route-btn" class="primary">알아서 연결</button>
+  </section>
+
+  <nav class="tabs" role="tablist">
+    <button data-tab="compose" class="active">✍️ 작성</button>
+    <button data-tab="coach">🩺 코칭</button>
+    <button data-tab="interpret">🔍 해석</button>
+    <button data-tab="rehearsal">🎭 리허설</button>
+    <button data-tab="contacts">👥 상대</button>
+    <button data-tab="usage">📊 토큰</button>
+  </nav>
+
+  <main>
+    <!-- ① 작성 -->
+    <section id="tab-compose" class="tab active">
+      <div class="card form">
+        <div class="row">
+          <label>관계<select class="relation-select" id="compose-relation"></select></label>
+          <label>목적<select class="purpose-select" id="compose-purpose"></select></label>
+          <label>상대<select class="contact-select" id="compose-contact"></select></label>
+        </div>
+        <label>전하고 싶은 핵심 내용
+          <textarea id="compose-input" rows="4" placeholder="예) 과제 제출 기한을 하루 연장하고 싶음. 아파서 병원에 다녀옴."></textarea>
+        </label>
+        <button id="compose-btn" class="primary">초안 만들기</button>
+      </div>
+      <div id="compose-result"></div>
+    </section>
+
+    <!-- ② 코칭 -->
+    <section id="tab-coach" class="tab">
+      <div class="card form">
+        <div class="row">
+          <label>관계<select class="relation-select" id="coach-relation"></select></label>
+          <label>목적<select class="purpose-select" id="coach-purpose"></select></label>
+          <label>상대<select class="contact-select" id="coach-contact"></select></label>
+        </div>
+        <label>내가 쓴 메시지
+          <textarea id="coach-input" rows="5" placeholder="보내기 전에 점검할 메시지를 붙여 넣으세요."></textarea>
+        </label>
+        <button id="coach-btn" class="primary">코칭 받기</button>
+      </div>
+      <div id="coach-result"></div>
+    </section>
+
+    <!-- ③ 해석 -->
+    <section id="tab-interpret" class="tab">
+      <div class="card form">
+        <div class="row">
+          <label>관계<select class="relation-select" id="interpret-relation"></select></label>
+          <label>상대<select class="contact-select" id="interpret-contact"></select></label>
+        </div>
+        <label>받은 메시지
+          <textarea id="interpret-input" rows="4" placeholder="받은 메시지를 붙여 넣거나, 아래에 캡처를 올리세요."></textarea>
+        </label>
+        <label class="file">캡처 이미지 (선택)
+          <input id="interpret-image" type="file" accept="image/*">
+        </label>
+        <img id="interpret-preview" class="preview" alt="" hidden>
+        <button id="interpret-btn" class="primary">해석하기</button>
+      </div>
+      <div id="interpret-result"></div>
+    </section>
+
+    <!-- ④ 리허설 -->
+    <section id="tab-rehearsal" class="tab">
+      <div class="card form">
+        <div class="row">
+          <label>시나리오<select id="scenario-select"></select></label>
+          <label>상대<select class="contact-select" id="rehearsal-contact"></select></label>
+        </div>
+        <p id="scenario-desc" class="muted"></p>
+        <button id="rehearsal-start" class="primary">연습 시작</button>
+      </div>
+      <div id="rehearsal-box" class="card chat" hidden>
+        <div id="chat-log" class="chat-log"></div>
+        <form id="chat-form" class="chat-input">
+          <input id="chat-text" placeholder="메시지를 입력하세요" autocomplete="off">
+          <button class="primary">보내기</button>
+          <button type="button" id="rehearsal-end">끝내고 피드백</button>
+        </form>
+      </div>
+      <div id="rehearsal-result"></div>
+    </section>
+
+    <!-- ⑤ 상대(관계 메모리) -->
+    <section id="tab-contacts" class="tab">
+      <div class="grid-2">
+        <div class="card form">
+          <h3 id="contact-form-title">새 상대 추가</h3>
+          <input type="hidden" id="contact-id">
+          <label>이름<input id="contact-name" placeholder="예) 김민수 교수님"></label>
+          <label>관계<select class="relation-select" id="contact-relation"></select></label>
+          <label>메모<textarea id="contact-profile" rows="3" placeholder="성격, 선호, 주의할 점"></textarea></label>
+          <div class="row">
+            <button id="contact-save" class="primary">저장</button>
+            <button id="contact-reset" type="button">새로 쓰기</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>저장된 상대</h3>
+          <ul id="contact-list" class="list"></ul>
+        </div>
+      </div>
+      <div id="contact-history"></div>
+    </section>
+
+    <!-- 토큰 사용량 -->
+    <section id="tab-usage" class="tab">
+      <div class="row space">
+        <h2>HyperCLOVA X 사용량</h2>
+        <button id="usage-refresh">새로고침</button>
+      </div>
+      <div id="usage-result"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
