@@ -1,0 +1,25 @@
+"""기능들이 공통으로 쓰는 부품 묶음. app.state.core 에 하나만 만들어 둠."""
+from dataclasses import dataclass
+
+from .config import Settings
+from .customize import Customize
+from .hcx import HCXClient
+from .services.rag import KnowledgeBase
+
+
+@dataclass
+class Core:
+    settings: Settings
+    hcx: HCXClient
+    customize: Customize
+    knowledge: KnowledgeBase
+
+    @classmethod
+    def build(cls, settings: Settings) -> "Core":
+        hcx = HCXClient(settings)
+        return cls(
+            settings=settings,
+            hcx=hcx,
+            customize=Customize(settings.customize_dir),
+            knowledge=KnowledgeBase(hcx, settings.customize_dir / "knowledge", settings.data_dir),
+        )

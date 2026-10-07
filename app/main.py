@@ -4,8 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from .config import Settings
-from .customize import Customize, CustomizeError
-from .hcx import HCXClient, HCXError
+from .core import Core
+from .customize import CustomizeError
+from .hcx import HCXError
 from .routes import coach, domain, health, messages
 
 
@@ -14,9 +15,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     settings.data_dir.mkdir(parents=True, exist_ok=True)
 
     app = FastAPI(title="한국어 관계 기반 메시지 코치 API", version="0.1.0")
-    app.state.settings = settings
-    app.state.hcx = HCXClient(settings)
-    app.state.customize = Customize(settings.customize_dir)
+    app.state.core = Core.build(settings)
 
     @app.exception_handler(HCXError)
     async def hcx_error(request: Request, error: HCXError):

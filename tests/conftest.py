@@ -23,7 +23,7 @@ def build_client(tmp_path, handler=None, **env):
         env.setdefault("CLOVA_API_KEY", "test-key")
     app = create_app(Settings.from_env(env))
     if handler:
-        app.state.hcx.transport = httpx.MockTransport(handler)
+        app.state.core.hcx.transport = httpx.MockTransport(handler)
     return TestClient(app)
 
 
