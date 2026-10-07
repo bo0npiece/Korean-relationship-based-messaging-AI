@@ -1,9 +1,10 @@
 """③ 받은 메시지 해석: (캡처면 HCX-005로 글자 추출) → HCX-007로 의도·감정 분석 + 답장 초안."""
-from .common import meta, prepare
+from .common import find_contact, meta, prepare, remember
 
 
 async def interpret(core, text: str | None = None, image_b64: str | None = None,
-                    relation: str | None = None) -> dict:
+                    relation: str | None = None, contact_id: int | None = None) -> dict:
+    contact = find_contact(core, contact_id)
     calls = []
     extracted = None
     if image_b64:
@@ -15,9 +16,10 @@ async def interpret(core, text: str | None = None, image_b64: str | None = None,
     message = "\n\n".join(x for x in (text, extracted) if x)
 
     # 2단계: 텍스트 분석
-    values, refs = await prepare(core, message, relation)
+    values, refs = await prepare(core, message, relation, contact=contact)
     system = core.customize.prompt("interpret", **values)
     result = await core.hcx.chat_json("interpret", system, message, core.customize.schema("interpret"))
     calls.append(result)
+    remember(core, contact, "interpret", message, result.data.get("intent", ""))
     return {"source_text": message, "extracted_text": extracted, **result.data,
             "references": refs, "meta": meta(*calls)}

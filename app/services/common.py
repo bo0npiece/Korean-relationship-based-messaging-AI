@@ -1,4 +1,6 @@
 """기능들이 같이 쓰는 도우미: 프롬프트 변수 만들기, 응답 메타 정보."""
+from fastapi import HTTPException
+
 from ..customize import Customize
 from ..hcx import HCXResult
 from .rag import format_references
@@ -41,11 +43,32 @@ def meta(*results: HCXResult) -> dict:
     return {"calls": calls, "total_tokens": sum(c["total_tokens"] or 0 for c in calls)}
 
 
-async def prepare(core, query: str, relation: str | None = None, purpose: str | None = None):
-    """프롬프트 변수 + 참고 자료 검색. (values, references 목록) 반환."""
+def find_contact(core, contact_id: int | None) -> dict | None:
+    if contact_id is None:
+        return None
+    contact = core.memory.get_contact(contact_id)
+    if contact is None:
+        raise HTTPException(404, "없는 상대입니다.")
+    return contact
+
+
+async def prepare(core, query: str, relation: str | None = None, purpose: str | None = None,
+                  contact: dict | None = None):
+    """프롬프트 변수 + 참고 자료({references}) + 관계 메모리({memory}). (values, references 목록) 반환."""
+    if contact and not relation:
+        relation = contact.get("relation")  # 관계를 안 고르면 상대 프로필의 관계 사용
     values = base_values(core.customize, relation, purpose)
+    if contact:
+        values["memory"] = core.memory.memory_text(contact, values["relation"],
+                                                   setting(core.customize, "memory_recent", 3))
     hits = await core.knowledge.search(query, setting(core.customize, "rag_top_k", 3))
     if hits:
         values["references"] = format_references(hits)
     refs = [{"title": h["title"], "source": h["source"], "score": h["score"]} for h in hits]
     return values, refs
+
+
+def remember(core, contact: dict | None, feature: str, input_text: str, output_text: str):
+    """상대를 지정했으면 이번 대화를 기록 (다음 요청의 {memory}에 반영)."""
+    if contact:
+        core.memory.add_interaction(contact["id"], feature, input_text, output_text)

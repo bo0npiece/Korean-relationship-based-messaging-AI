@@ -1,10 +1,12 @@
 """② 내 글 코칭: 점수 + 문제 구간 + 수정본."""
-from .common import meta, prepare
+from .common import find_contact, meta, prepare, remember
 from .highlight import first_sentence, locate_spans
 
 
-async def coach(core, text: str, relation: str | None = None, purpose: str | None = None) -> dict:
-    values, refs = await prepare(core, text, relation, purpose)
+async def coach(core, text: str, relation: str | None = None, purpose: str | None = None,
+                contact_id: int | None = None) -> dict:
+    contact = find_contact(core, contact_id)
+    values, refs = await prepare(core, text, relation, purpose, contact)
     system = core.customize.prompt("coach", **values)
     result = await core.hcx.chat_json("coach", system, text, core.customize.schema("coach"))
 
@@ -15,4 +17,5 @@ async def coach(core, text: str, relation: str | None = None, purpose: str | Non
         for issue in issues:
             issue["quote"] = first_sentence(text)
     data["issues"] = locate_spans(text, issues)
+    remember(core, contact, "coach", text, data.get("revised", ""))
     return {"original": text, **data, "references": refs, "meta": meta(result)}

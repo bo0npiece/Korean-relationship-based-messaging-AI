@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from .config import Settings
 from .customize import Customize
 from .hcx import HCXClient
+from .memory import MemoryStore
 from .services.rag import KnowledgeBase
 
 
@@ -13,6 +14,7 @@ class Core:
     hcx: HCXClient
     customize: Customize
     knowledge: KnowledgeBase
+    memory: MemoryStore
 
     @classmethod
     def build(cls, settings: Settings) -> "Core":
@@ -22,4 +24,5 @@ class Core:
             hcx=hcx,
             customize=Customize(settings.customize_dir),
             knowledge=KnowledgeBase(hcx, settings.customize_dir / "knowledge", settings.data_dir),
+            memory=MemoryStore(settings.db_path),
         )

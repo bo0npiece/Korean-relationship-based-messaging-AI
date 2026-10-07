@@ -7,7 +7,7 @@ from .config import Settings
 from .core import Core
 from .customize import CustomizeError
 from .hcx import HCXError
-from .routes import coach, domain, health, messages
+from .routes import coach, contacts, domain, health, messages
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -37,6 +37,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(domain.router)
     app.include_router(coach.router)
     app.include_router(messages.router)
+    app.include_router(contacts.router)
 
     @app.get("/", include_in_schema=False)
     async def index():
