@@ -1,0 +1,8 @@
+{
+  "type": "object",
+  "properties": {
+    "draft": {"type": "string"},
+    "notes": {"type": "array", "maxItems": 5, "items": {"type": "string"}}
+  },
+  "required": ["draft", "notes"]
+}

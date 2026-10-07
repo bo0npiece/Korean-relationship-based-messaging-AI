@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from .config import Settings
 from .customize import Customize, CustomizeError
 from .hcx import HCXClient, HCXError
-from .routes import coach, domain, health
+from .routes import coach, domain, health, messages
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -37,6 +37,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(health.router)
     app.include_router(domain.router)
     app.include_router(coach.router)
+    app.include_router(messages.router)
 
     @app.get("/", include_in_schema=False)
     async def index():

@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "properties": {
+    "intent": {"type": "string"},
+    "emotion": {"type": "string"},
+    "urgency": {"type": "string", "enum": ["high", "medium", "low"]},
+    "key_points": {"type": "array", "maxItems": 5, "items": {"type": "string"}},
+    "reply_draft": {"type": "string"}
+  },
+  "required": ["intent", "emotion", "urgency", "key_points", "reply_draft"]
+}
