@@ -1,0 +1,31 @@
+{
+  "type": "object",
+  "properties": {
+    "overall_score": {"type": "integer", "minimum": 0, "maximum": 100},
+    "scores": {
+      "type": "object",
+      "properties": {
+        "politeness": {"type": "integer", "minimum": 0, "maximum": 100},
+        "clarity": {"type": "integer", "minimum": 0, "maximum": 100},
+        "naturalness": {"type": "integer", "minimum": 0, "maximum": 100}
+      },
+      "required": ["politeness", "clarity", "naturalness"]
+    },
+    "goal_achieved": {"type": "boolean"},
+    "good_points": {"type": "array", "maxItems": 3, "items": {"type": "string"}},
+    "improvements": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "properties": {
+          "quote": {"type": "string"},
+          "suggestion": {"type": "string"}
+        },
+        "required": ["quote", "suggestion"]
+      }
+    },
+    "summary": {"type": "string"}
+  },
+  "required": ["overall_score", "scores", "goal_achieved", "good_points", "improvements", "summary"]
+}
