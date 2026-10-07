@@ -1,0 +1,40 @@
+# 서비스 성격 정의. 코드 수정 없이 이 파일만 바꾸면 화면 선택지와 프롬프트가 바뀜.
+# TODO(DAY-OF): 주제 공개 후 아래 항목을 실제 내용으로 채우기 (지금은 형식 예시 1개씩)
+
+service:
+  name: 메시지 코치
+  target: 한국에서 공부하는 외국인 유학생   # TODO(DAY-OF)
+
+# 격식 단계
+formality_levels:
+  - id: formal
+    label: 격식체          # TODO(DAY-OF)
+    description: ""        # TODO(DAY-OF)
+
+# 상대와의 관계
+relations:
+  - id: professor
+    label: 교수님
+    formality: formal      # formality_levels의 id
+    note: ""               # TODO(DAY-OF): 이 관계에서 주의할 점
+
+# 메시지 목적
+purposes:
+  - id: request
+    label: 부탁·요청       # TODO(DAY-OF)
+
+# 리허설 시나리오
+scenarios:
+  - id: example
+    title: 예시 시나리오   # TODO(DAY-OF)
+    relation: professor    # relations의 id
+    ai_role: 교수님
+    situation: ""          # TODO(DAY-OF): 상황 설명
+    goal: ""               # TODO(DAY-OF): 사용자가 달성할 목표
+    opening: ""            # AI가 먼저 할 첫마디 (비우면 사용자가 먼저 시작)
+
+# 엔진 동작 값
+settings:
+  rag_top_k: 3              # 참고 자료 검색 개수
+  memory_recent: 3          # 프롬프트에 넣을 지난 대화 수
+  rehearsal_window: 8       # 리허설에서 모델에 보내는 최근 메시지 수

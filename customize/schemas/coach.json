@@ -1,0 +1,31 @@
+{
+  "type": "object",
+  "properties": {
+    "scores": {
+      "type": "object",
+      "properties": {
+        "politeness": {"type": "integer", "minimum": 0, "maximum": 100},
+        "clarity": {"type": "integer", "minimum": 0, "maximum": 100},
+        "misunderstanding_risk": {"type": "integer", "minimum": 0, "maximum": 100}
+      },
+      "required": ["politeness", "clarity", "misunderstanding_risk"]
+    },
+    "issues": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "properties": {
+          "quote": {"type": "string"},
+          "problem": {"type": "string"},
+          "suggestion": {"type": "string"},
+          "severity": {"type": "string", "enum": ["high", "medium", "low"]}
+        },
+        "required": ["quote", "problem", "suggestion", "severity"]
+      }
+    },
+    "revised": {"type": "string"},
+    "summary": {"type": "string"}
+  },
+  "required": ["scores", "issues", "revised", "summary"]
+}

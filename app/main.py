@@ -4,8 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from .config import Settings
+from .customize import Customize, CustomizeError
 from .hcx import HCXClient, HCXError
-from .routes import health
+from .routes import domain, health
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -15,11 +16,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(title="한국어 관계 기반 메시지 코치 API", version="0.1.0")
     app.state.settings = settings
     app.state.hcx = HCXClient(settings)
+    app.state.customize = Customize(settings.customize_dir)
 
     @app.exception_handler(HCXError)
     async def hcx_error(request: Request, error: HCXError):
         # HCX 실패를 프론트가 읽기 쉬운 {"detail": ...}로 변환
         return JSONResponse(status_code=error.status_code, content={"detail": error.message})
+
+    @app.exception_handler(CustomizeError)
+    async def customize_error(request: Request, error: CustomizeError):
+        return JSONResponse(status_code=500, content={"detail": f"customize 설정 오류: {error}"})
 
     app.add_middleware(
         CORSMiddleware,
@@ -29,6 +35,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
 
     app.include_router(health.router)
+    app.include_router(domain.router)
 
     @app.get("/", include_in_schema=False)
     async def index():
