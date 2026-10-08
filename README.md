@@ -3,6 +3,8 @@
 외국인 유학생이 교수님·선배·알바 사장님 등 상대와의 관계에 맞는 한국어 메시지를 쓰고, 점검하고, 해석하고, 연습하는 서비스입니다. HyperCLOVA X(CLOVA Studio) API만 사용합니다.
 
 > 범용 해커톤 백엔드(`tasks.json` 방식)는 `main` 브랜치에 그대로 있습니다.
+>
+> **무엇을 바꾸려면 어디를 고치는지는 [DEV_GUIDE.md](DEV_GUIDE.md)를 보세요.**
 
 ## 실행 (Windows PowerShell)
 

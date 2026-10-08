@@ -15,6 +15,7 @@ from jsonschema import Draft202012Validator, ValidationError
 
 from ..config import Settings
 from .cache import ResponseCache
+from .image import as_data_uri
 from .mock import MOCK_CHAT_TEXT, MOCK_IMAGE_TEXT, fake_embedding, fake_from_schema
 from .schema import clean_schema
 from .usage import UsageLog
@@ -120,13 +121,13 @@ class HCXClient:
 
     async def read_image(self, feature: str, prompt: str, *, image_b64: str | None = None,
                          image_url: str | None = None, max_tokens: int = 1024, use_cache: bool = True) -> HCXResult:
-        """이미지 읽기(HCX-005). image_b64는 image.prepare_image() 결과를 넣음."""
+        """이미지 읽기(HCX-005). image_b64는 image.prepare_image() 결과(data URI)를 넣음."""
         if not (image_b64 or image_url):
             raise ValueError("image_b64 또는 image_url 중 하나는 필요합니다.")
         model = self.settings.model_vision
         if self.settings.mock:
             return self._mock(feature, "image", model, text=MOCK_IMAGE_TEXT)
-        image_part = ({"type": "image_url", "dataUri": {"data": image_b64}} if image_b64
+        image_part = ({"type": "image_url", "dataUri": {"data": as_data_uri(image_b64)}} if image_b64
                       else {"type": "image_url", "imageUrl": {"url": image_url}})
         payload = {
             "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}, image_part]}],

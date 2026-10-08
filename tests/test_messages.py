@@ -39,6 +39,9 @@ def test_interpret_image_two_step_pipeline(tmp_path):
 
     (path1, p1), (path2, p2) = seen
     assert path1.endswith("/HCX-005") and p1["messages"][0]["content"][1]["type"] == "image_url"
+    # 접두어가 없으면 HCX가 400 Invalid parameter를 돌려줌
+    assert p1["messages"][0]["content"][1]["dataUri"]["data"].startswith("data:image/jpeg;base64,")
+    assert set(p1) == {"messages", "maxTokens", "temperature"}  # thinking/responseFormat 없음
     assert path2.endswith("/HCX-007") and "휴강입니다" in p2["messages"][1]["content"][0]["text"]
     assert body["extracted_text"] == "교수님: 내일 수업은 휴강입니다." and body["intent"] == "휴강 안내"
     assert len(body["meta"]["calls"]) == 2
