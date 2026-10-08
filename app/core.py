@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from .config import Settings
 from .customize import Customize
 from .hcx import HCXClient
-from .memory import MemoryStore
-from .rehearsal_store import RehearsalStore
-from .services.rag import KnowledgeBase
+from .stores.contact_store import ContactStore
+from .stores.rehearsal_store import RehearsalStore
+from .services.knowledge import KnowledgeBase
 
 
 @dataclass
@@ -15,7 +15,7 @@ class Core:
     hcx: HCXClient
     customize: Customize
     knowledge: KnowledgeBase
-    memory: MemoryStore
+    contacts: ContactStore
     rehearsals: RehearsalStore
 
     @classmethod
@@ -26,6 +26,6 @@ class Core:
             hcx=hcx,
             customize=Customize(settings.customize_dir),
             knowledge=KnowledgeBase(hcx, settings.customize_dir / "knowledge", settings.data_dir),
-            memory=MemoryStore(settings.db_path),
+            contacts=ContactStore(settings.db_path),
             rehearsals=RehearsalStore(settings.db_path),
         )

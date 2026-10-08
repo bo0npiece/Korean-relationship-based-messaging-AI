@@ -1,10 +1,10 @@
-"""Step 5: 작성 API, 해석 API."""
+"""③ POST /api/interpret — 입력 검사, 캡처 2단계 파이프라인(HCX-005 → HCX-007)."""
 import io
 import json
 
 from PIL import Image
 
-from conftest import hcx_reply, build_client
+from conftest import build_client, hcx_reply
 
 
 def png_bytes():
@@ -13,10 +13,7 @@ def png_bytes():
     return out.getvalue()
 
 
-def test_compose_mock_and_interpret_validation(client):
-    body = client.post("/api/compose", json={"key_points": "과제 기한 하루 연장 부탁", "relation": "professor"}).json()
-    assert body["draft"] and body["meta"]["calls"][0]["model"] == "HCX-007"
-
+def test_interpret_validation(client):
     assert client.post("/api/interpret", data={"text": "  "}).status_code == 422
     bad = client.post("/api/interpret", files={"image": ("a.png", b"not image", "image/png")})
     assert bad.status_code == 422

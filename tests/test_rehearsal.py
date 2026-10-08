@@ -1,4 +1,4 @@
-"""Step 8: 리허설."""
+"""④ /api/rehearsal/*"""
 import json
 
 from conftest import build_client, hcx_reply

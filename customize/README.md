@@ -13,7 +13,7 @@
 |---|---|---|
 | ① 작성 | `compose.md` | `compose.json` |
 | ② 코칭 | `coach.md` | `coach.json` |
-| ③ 해석 | `ocr.md`(캡처 읽기) → `interpret.md` | `interpret.json` |
+| ③ 해석 | `interpret_ocr.md`(캡처 읽기) → `interpret.md` | `interpret.json` |
 | ④ 리허설 | `rehearsal_role.md`(대화) → `rehearsal_feedback.md`(평가) | `rehearsal_feedback.json` |
 | 자유 입력 분류 | `route.md` | — |
 

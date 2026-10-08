@@ -1,4 +1,4 @@
-"""Step 3: customize 로더."""
+"""customize/ 로더 (domain.yaml, prompts, schemas)."""
 import shutil
 from pathlib import Path
 

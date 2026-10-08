@@ -1,4 +1,4 @@
-"""서버 상태 확인."""
+"""GET /api/health — 서버 상태, MOCK 여부, 모델 설정."""
 from fastapi import APIRouter, Depends
 
 from ..config import Settings

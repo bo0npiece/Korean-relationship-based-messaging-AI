@@ -1,14 +1,14 @@
-"""기능들이 같이 쓰는 도우미: 프롬프트 변수 만들기, 응답 메타 정보."""
+"""여러 기능이 같이 쓰는 도우미: 프롬프트 변수 만들기, 상대 찾기·기록 저장, 응답 meta."""
 from fastapi import HTTPException
 
 from ..customize import Customize
 from ..hcx import HCXResult
-from .rag import format_references
+from .knowledge import format_references
 
 EMPTY = "(없음)"
 
 
-def base_values(customize: Customize, relation: str | None = None, purpose: str | None = None) -> dict:
+def domain_values(customize: Customize, relation: str | None = None, purpose: str | None = None) -> dict:
     """domain.yaml에서 관계·목적·격식 정보를 찾아 프롬프트 변수로 만듦."""
     domain = customize.domain()
     service = domain.get("service") or {}
@@ -27,11 +27,11 @@ def base_values(customize: Customize, relation: str | None = None, purpose: str 
     }
 
 
-def setting(customize: Customize, key: str, default):
+def domain_setting(customize: Customize, key: str, default):
     return (customize.domain().get("settings") or {}).get(key, default)
 
 
-def meta(*results: HCXResult) -> dict:
+def call_meta(*results: HCXResult) -> dict:
     """이번 요청에서 일어난 HCX 호출 요약 (프론트 토큰 표시용)."""
     calls = [{
         "model": r.model,
@@ -46,29 +46,29 @@ def meta(*results: HCXResult) -> dict:
 def find_contact(core, contact_id: int | None) -> dict | None:
     if contact_id is None:
         return None
-    contact = core.memory.get_contact(contact_id)
+    contact = core.contacts.get_contact(contact_id)
     if contact is None:
         raise HTTPException(404, "없는 상대입니다.")
     return contact
 
 
-async def prepare(core, query: str, relation: str | None = None, purpose: str | None = None,
+async def build_prompt_values(core, query: str, relation: str | None = None, purpose: str | None = None,
                   contact: dict | None = None):
     """프롬프트 변수 + 참고 자료({references}) + 관계 메모리({memory}). (values, references 목록) 반환."""
     if contact and not relation:
         relation = contact.get("relation")  # 관계를 안 고르면 상대 프로필의 관계 사용
-    values = base_values(core.customize, relation, purpose)
+    values = domain_values(core.customize, relation, purpose)
     if contact:
-        values["memory"] = core.memory.memory_text(contact, values["relation"],
-                                                   setting(core.customize, "memory_recent", 3))
-    hits = await core.knowledge.search(query, setting(core.customize, "rag_top_k", 3))
+        values["memory"] = core.contacts.memory_text(contact, values["relation"],
+                                                   domain_setting(core.customize, "memory_recent", 3))
+    hits = await core.knowledge.search(query, domain_setting(core.customize, "knowledge_top_k", 3))
     if hits:
         values["references"] = format_references(hits)
     refs = [{"title": h["title"], "source": h["source"], "score": h["score"]} for h in hits]
     return values, refs
 
 
-def remember(core, contact: dict | None, feature: str, input_text: str, output_text: str):
+def save_interaction(core, contact: dict | None, feature: str, input_text: str, output_text: str):
     """상대를 지정했으면 이번 대화를 기록 (다음 요청의 {memory}에 반영)."""
     if contact:
-        core.memory.add_interaction(contact["id"], feature, input_text, output_text)
+        core.contacts.add_interaction(contact["id"], feature, input_text, output_text)

@@ -1,4 +1,4 @@
-"""Step 2: HCX 클라이언트 (실제 API 대신 가짜 서버 사용)."""
+"""HCX 클라이언트 (실제 API 대신 가짜 서버 사용)."""
 import asyncio
 import json
 

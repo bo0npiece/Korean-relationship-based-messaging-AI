@@ -1,4 +1,4 @@
-"""Step 7: 관계 메모리."""
+"""⑤ 관계 메모리 (/api/contacts)."""
 import json
 
 from conftest import build_client, hcx_reply

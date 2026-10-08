@@ -1,18 +1,17 @@
-"""FastAPI 앱 조립. 실행: uvicorn app.main:app"""
-from pathlib import Path
+"""FastAPI 앱 조립. 실행: uvicorn app.main:app
 
+백엔드 전용입니다. 프론트는 CORS_ORIGINS에 주소를 넣고 /api/* 를 직접 호출합니다.
+기능을 빼려면 아래 include_router 줄과 routes/·services/의 같은 이름 파일을 지우면 됩니다.
+"""
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from .config import Settings
 from .core import Core
 from .customize import CustomizeError
 from .hcx import HCXError
-from .routes import coach, contacts, domain, health, messages, rehearsal, system
-
-WEB_DIR = Path(__file__).resolve().parent.parent / "web"
+from .routes import coach, compose, contacts, domain, health, interpret, knowledge, rehearsal, route, usage
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -38,20 +37,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_headers=["Content-Type", "X-Team-Key"],
     )
 
-    app.include_router(health.router)
-    app.include_router(domain.router)
-    app.include_router(coach.router)
-    app.include_router(messages.router)
-    app.include_router(contacts.router)
-    app.include_router(rehearsal.router)
-    app.include_router(system.router)
-
-    # 데모 화면 (web/ 폴더를 정적 파일로 서빙)
-    app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
+    # 시스템
+    app.include_router(health.router)      # GET  /api/health
+    app.include_router(domain.router)      # GET  /api/domain
+    app.include_router(usage.router)       # GET  /api/usage
+    # 기능
+    app.include_router(compose.router)     # ① POST /api/compose
+    app.include_router(coach.router)       # ② POST /api/coach
+    app.include_router(interpret.router)   # ③ POST /api/interpret
+    app.include_router(rehearsal.router)   # ④ /api/rehearsal/*
+    app.include_router(contacts.router)    # ⑤ /api/contacts
+    app.include_router(route.router)       # POST /api/route
+    app.include_router(knowledge.router)   # GET  /api/knowledge/search
 
     @app.get("/", include_in_schema=False)
     async def index():
-        return FileResponse(WEB_DIR / "index.html")
+        return RedirectResponse("/docs")
 
     return app
 

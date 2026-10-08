@@ -1,4 +1,4 @@
-"""Step 6: RAG (MOCK 임베딩은 글자 2-gram 기반이라 비슷한 글이 실제로 가깝게 나옴)."""
+"""참고 자료 검색(RAG) (MOCK 임베딩은 글자 2-gram 기반이라 비슷한 글이 실제로 가깝게 나옴)."""
 import json
 
 import httpx
@@ -29,8 +29,8 @@ def test_search_ranks_and_caches_index(tmp_path):
     client.get("/api/knowledge/search", params={"q": "대타 부탁"})
     log = (tmp_path / "data" / "usage_log.jsonl").read_text(encoding="utf-8").splitlines()
     features = [json.loads(line)["feature"] for line in log]
-    assert features.count("rag_index") == 2   # 조각 임베딩은 처음 한 번만
-    assert features.count("rag_query") == 2
+    assert features.count("knowledge_index") == 2   # 조각 임베딩은 처음 한 번만
+    assert features.count("knowledge_query") == 2
 
 
 def test_references_injected_into_prompt(tmp_path):

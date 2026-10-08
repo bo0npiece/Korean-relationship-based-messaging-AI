@@ -1,26 +1,12 @@
-"""POST /api/compose, POST /api/interpret"""
+"""③ POST /api/interpret — 받은 메시지(텍스트/캡처) → 의도·감정·답장 초안."""
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
-from pydantic import BaseModel, Field
 
 from ..core import Core
 from ..deps import get_core, require_team_key
 from ..hcx.image import MAX_BYTES, prepare_image
-from ..services.compose import compose
 from ..services.interpret import interpret
 
-router = APIRouter(prefix="/api", tags=["messages"], dependencies=[Depends(require_team_key)])
-
-
-class ComposeRequest(BaseModel):
-    key_points: str = Field(min_length=1, max_length=2000, description="전하고 싶은 핵심 내용")
-    relation: str | None = None
-    purpose: str | None = None
-    contact_id: int | None = None
-
-
-@router.post("/compose")
-async def post_compose(body: ComposeRequest, core: Core = Depends(get_core)):
-    return await compose(core, body.key_points, body.relation, body.purpose, body.contact_id)
+router = APIRouter(prefix="/api", tags=["interpret"], dependencies=[Depends(require_team_key)])
 
 
 @router.post("/interpret")

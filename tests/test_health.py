@@ -1,4 +1,4 @@
-"""Step 1: 설정과 /api/health."""
+"""설정과 /api/health."""
 import pytest
 from fastapi import Depends
 from fastapi.testclient import TestClient

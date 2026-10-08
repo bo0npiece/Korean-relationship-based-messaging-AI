@@ -35,6 +35,6 @@ scenarios:
 
 # 엔진 동작 값
 settings:
-  rag_top_k: 3              # 참고 자료 검색 개수
+  knowledge_top_k: 3              # 참고 자료 검색 개수
   memory_recent: 3          # 프롬프트에 넣을 지난 대화 수
   rehearsal_window: 8       # 리허설에서 모델에 보내는 최근 메시지 수

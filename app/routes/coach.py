@@ -1,4 +1,4 @@
-"""POST /api/coach"""
+"""② POST /api/coach — 내 메시지 → 점수 3종 + 문제 구간(start/end) + 수정본."""
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 

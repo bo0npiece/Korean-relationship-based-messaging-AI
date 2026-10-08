@@ -1,4 +1,4 @@
-"""관계 메모리: 상대(contacts)와 지난 대화 기록(interactions)을 SQLite에 저장."""
+"""관계 메모리 저장소: 상대(contacts)와 지난 대화 기록(interactions)을 SQLite에 저장."""
 import sqlite3
 import time
 from pathlib import Path
@@ -6,7 +6,7 @@ from pathlib import Path
 CONTACT_FIELDS = ("name", "relation", "profile")
 
 
-class MemoryStore:
+class ContactStore:
     def __init__(self, path: Path):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)

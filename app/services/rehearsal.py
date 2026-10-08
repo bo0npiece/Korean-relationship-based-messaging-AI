@@ -2,7 +2,7 @@
 from fastapi import HTTPException
 
 from ..hcx import text_message
-from .common import EMPTY, base_values, find_contact, meta, remember, setting
+from .shared import EMPTY, call_meta, domain_setting, domain_values, find_contact, save_interaction
 
 
 def _scenario(core, scenario_id: str) -> dict:
@@ -20,7 +20,7 @@ def _session(core, session_id: str) -> dict:
 
 
 def _values(core, scenario: dict, contact: dict | None) -> dict:
-    values = base_values(core.customize, scenario.get("relation"))
+    values = domain_values(core.customize, scenario.get("relation"))
     values.update(
         scenario_title=scenario.get("title", ""),
         ai_role=scenario.get("ai_role") or values["relation"],
@@ -28,7 +28,7 @@ def _values(core, scenario: dict, contact: dict | None) -> dict:
         goal=scenario.get("goal") or EMPTY,
     )
     if contact:
-        values["memory"] = core.memory.memory_text(contact, values["relation"])
+        values["memory"] = core.contacts.memory_text(contact, values["relation"])
     return values
 
 
@@ -54,7 +54,7 @@ async def send(core, session_id: str, text: str) -> dict:
     core.rehearsals.add_turn(session_id, "user", text)
 
     # 슬라이딩 윈도우: 최근 N개 메시지만 보내서 토큰 절약
-    window = int(setting(core.customize, "rehearsal_window", 8))
+    window = int(domain_setting(core.customize, "rehearsal_window", 8))
     recent = core.rehearsals.turns(session_id)[-window:]
     system = core.customize.prompt("rehearsal_role", **_values(core, scenario, contact))
     messages = [text_message("system", system)] + [text_message(t["role"], t["content"]) for t in recent]
@@ -62,7 +62,7 @@ async def send(core, session_id: str, text: str) -> dict:
 
     reply = result.text.strip()
     core.rehearsals.add_turn(session_id, "assistant", reply)
-    return {"reply": reply, "meta": meta(result)}
+    return {"reply": reply, "meta": call_meta(result)}
 
 
 async def end(core, session_id: str) -> dict:
@@ -83,9 +83,9 @@ async def end(core, session_id: str) -> dict:
     system = core.customize.prompt("rehearsal_feedback", **values)
     result = await core.hcx.chat_json("rehearsal_feedback", system, transcript,
                                       core.customize.schema("rehearsal_feedback"))
-    report = {"report": result.data, "transcript": turns, "meta": meta(result)}
+    report = {"report": result.data, "transcript": turns, "meta": call_meta(result)}
     core.rehearsals.finish(session_id, report)
-    remember(core, contact, "rehearsal", scenario.get("title", ""), result.data.get("summary", ""))
+    save_interaction(core, contact, "rehearsal", scenario.get("title", ""), result.data.get("summary", ""))
     return {"session_id": session_id, **report}
 
 

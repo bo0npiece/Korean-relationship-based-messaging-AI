@@ -1,4 +1,4 @@
-"""문제 구간(quote)을 원문에서 찾아 start/end 오프셋을 붙임 (프론트 하이라이트용)."""
+"""coach 전용: 문제 구간(quote)을 원문에서 찾아 start/end 오프셋을 붙임 (프론트 하이라이트용)."""
 import re
 
 STRIP_CHARS = " \t\n\"'“”‘’「」『』"

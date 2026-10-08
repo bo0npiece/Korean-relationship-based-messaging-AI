@@ -1,5 +1,5 @@
-"""Step 4: 코칭 API."""
-from app.services.highlight import locate_spans
+"""② POST /api/coach"""
+from app.services.coach_highlight import locate_spans
 from conftest import build_client, hcx_reply
 
 TEXT = "교수님 안녕하세요. 과제 좀 늦게 내도 돼요? 빨리 답장 주세요."

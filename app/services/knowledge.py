@@ -1,4 +1,4 @@
-"""RAG: customize/knowledge/*.md 를 '## 제목' 단위로 쪼개 임베딩하고 코사인 유사도로 검색."""
+"""참고 자료 검색(RAG): customize/knowledge/*.md 를 '## 제목' 단위로 쪼개 임베딩하고 코사인 유사도로 검색."""
 import hashlib
 import json
 import math
@@ -46,7 +46,7 @@ class KnowledgeBase:
 
     def _index_path(self) -> Path:
         # MOCK 벡터와 실제 벡터는 섞이면 안 되므로 파일 분리
-        return self.data_dir / f"rag_index_{'mock' if self.hcx.settings.mock else 'live'}.json"
+        return self.data_dir / f"knowledge_index_{'mock' if self.hcx.settings.mock else 'live'}.json"
 
     async def _vectors(self, chunks: list[dict]) -> dict[str, list[float]]:
         """조각별 벡터. 이미 임베딩한 글은 JSON 캐시에서 꺼냄 (내용이 바뀐 조각만 다시 임베딩)."""
@@ -57,7 +57,7 @@ class KnowledgeBase:
             key = hashlib.sha256(chunk["text"].encode()).hexdigest()
             chunk["key"] = key
             if key not in index:
-                index[key] = (await self.hcx.embed("rag_index", chunk["text"])).data
+                index[key] = (await self.hcx.embed("knowledge_index", chunk["text"])).data
                 changed = True
         if changed:
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -69,7 +69,7 @@ class KnowledgeBase:
         if not chunks or not query.strip():
             return []  # 자료가 없으면 임베딩 호출도 안 함
         index = await self._vectors(chunks)
-        query_vec = (await self.hcx.embed("rag_query", query)).data
+        query_vec = (await self.hcx.embed("knowledge_query", query)).data
         for chunk in chunks:
             chunk["score"] = round(cosine(query_vec, index[chunk.pop("key")]), 4)
         return sorted(chunks, key=lambda c: c["score"], reverse=True)[:k]

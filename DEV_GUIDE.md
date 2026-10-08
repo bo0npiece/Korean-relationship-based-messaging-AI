@@ -14,15 +14,15 @@
 | 기획 (20) | "외국인 유학생 × 관계별 한국어"라는 타깃이 분명함 | 당일 주제와 연결하는 한 문장이 필요함 (예: 주제가 "소통"이면 그대로, "교육"이면 학습 도구로 포장) |
 | 창의 (10) | 관계 메모리, 리허설(역할극), 캡처 해석 | 데모에서 "같은 문장이 상대에 따라 다르게 고쳐지는" 장면을 보여 주기 |
 | 기술 (25) | 모델 3종 역할 분담, 2단계 파이프라인(005→007), Structured Outputs, 임베딩 RAG, 캐시·한도 | 실제 API로 아직 검증 안 됨 → **가장 먼저 smoke_test** |
-| 디자인 (25) | 게이지, 하이라이트, 전후 비교, 채팅 UI 뼈대 | 기본 화면 수준. 디자인 담당이 `web/style.css` 변수부터 교체 |
-| AI 활용 (20) | 기능마다 다른 모델·호출 조합, 토큰 탭으로 사용량 시각화 | 프롬프트 품질이 결과를 좌우 → 프롬프트 담당 시간 확보 |
+| 디자인 (25) | 응답에 점수·하이라이트 위치(start/end)·원문/수정본이 다 들어 있어 화면을 만들기 쉬움 | 이 브랜치는 백엔드 전용. 프론트는 팀에서 직접 연결 |
+| AI 활용 (20) | 기능마다 다른 모델·호출 조합, `/api/usage`로 기능별·모델별 사용량 제공 | 프롬프트 품질이 결과를 좌우 → 프롬프트 담당 시간 확보 |
 | 크레딧 | 모든 호출 기록, 캐시, 한도 | "많이 쓸수록 좋은지 / 아낄수록 좋은지" **운영진에게 확인** |
 
 ### 1-2. 리스크
 
 1. **주제 불일치**: 당일 주제가 "관계 메시지"와 멀 수 있음 → 2장의 유연성 범위 안에서 바꾸고, 범위를 넘으면 5장 방식으로 기능 추가
 2. **응답 속도**: HCX-007은 추론 모델이라 느릴 수 있음. 캡처 해석은 2번 호출이라 더 느림 → 데모 입력은 미리 한 번 실행해 캐시를 채워 두기
-3. **데모 중 API 실패**: 네트워크·한도 문제 → `.env`에서 `MOCK_MODE=1`로 바꾸면 즉시 화면 시연 가능 (결과에 `[MOCK]` 표시됨)
+3. **데모 중 API 실패**: 네트워크·한도 문제 → `.env`에서 `MOCK_MODE=1`로 바꾸면 즉시 MOCK 응답으로 시연 가능 (결과에 `[MOCK]` 표시됨)
 4. **규정**: 사전 제작 코드 반입 가능 여부 확인 필요
 
 ### 1-3. 유연성 평가: 어디까지 "파일만" 바꿔서 되나
@@ -31,10 +31,10 @@
 |---|---|---|
 | 서비스 이름, 타깃, 관계·목적·격식 목록, 시나리오 | ✅ 파일만 | `customize/domain.yaml` |
 | AI에게 주는 지시문 | ✅ 파일만 | `customize/prompts/*.md` |
-| AI 결과 형식 (필드 추가) | ✅ 파일만 (화면 표시는 JS 수정) | `customize/schemas/*.json` + `web/app.js` |
+| AI 결과 형식 (필드 추가) | ✅ 파일만 (표시는 프론트에서) | `customize/schemas/*.json` |
 | 참고 자료 | ✅ 파일만 | `customize/knowledge/*.md` |
 | 모델·주소·한도 | ✅ 파일만 | `.env` |
-| **새 프롬프트 변수** (`{level}` 같은 것) | ⚠️ 코드 1곳 | `app/services/common.py`의 `base_values()` |
+| **새 프롬프트 변수** (`{level}` 같은 것) | ⚠️ 코드 1곳 | `app/services/shared.py`의 `domain_values()` |
 | **temperature, max_tokens** | ⚠️ 코드 | 각 `app/services/*.py`의 호출 인자 |
 | **스키마 필드 이름 변경** (예: `revised` → `rewritten`) | ⚠️ 코드 몇 곳 | 6장 "코드가 의존하는 필드" 참고 |
 | **완전히 새 기능** (예: 퀴즈) | ❌ 코드 5곳 | 5장 따라 하기 |
@@ -46,31 +46,30 @@
 | A. **domain.yaml `variables:` 자동 주입**: yaml에 적은 값이 모든 프롬프트 `{변수}`로 자동 등록 | 새 변수 추가에 코드 수정 불필요 | 작음 |
 | B. **기능별 모델 설정을 domain.yaml로**: `features.coach.temperature` 같은 식 | temperature·max_tokens를 파일로 조절 | 작음 |
 | C. **범용 기능 실행기 `/api/run/{기능}`**: 프롬프트+스키마 파일만 추가하면 새 기능 API가 생김 | 당일 새 기능을 코드 없이 추가 | 중간 |
-| D. **화면 자동 렌더러**: 모르는 스키마 결과도 화면에 카드로 자동 표시 | C와 짝. 스키마 바꿔도 화면이 안 깨짐 | 중간 |
 
-> 추천: **A → B → C → D** 순서. A와 B는 금방 끝나고 바로 효과가 있습니다.
+> 추천: **A → B → C** 순서. A와 B는 금방 끝나고 바로 효과가 있습니다.
 
 ---
 
 ## 2. 전체 구조 한눈에
 
 ```
-[브라우저 web/]  ──HTTP──▶  [routes/]  ──▶  [services/]  ──▶  [hcx/client.py]  ──▶  HyperCLOVA X
+[프론트 (팀에서 연결)]  ──HTTP──▶  [routes/]  ──▶  [services/]  ──▶  [hcx/client.py]  ──▶  HyperCLOVA X
                             입력 검사        로직 조립          유일한 API 창구
                                               │  ▲
                                               ▼  │
                             [customize/]  프롬프트·스키마·도메인·자료  (요청마다 다시 읽음)
-                            [memory.py, rehearsal_store.py]  SQLite (data/app.sqlite3)
-                            [services/rag.py]  임베딩 검색 (data/rag_index_*.json)
+                            [stores/contact_store.py, stores/rehearsal_store.py]  SQLite (data/app.sqlite3)
+                            [services/knowledge.py]  임베딩 검색 (data/knowledge_index_*.json)
 ```
 
 | 폴더/파일 | 한 줄 역할 | 당일에 고칠 일 |
 |---|---|---|
 | `.env` | 키, 모델명, 한도 | 키 넣기, `MOCK_MODE=0` |
 | `customize/` | 서비스 성격 | **대부분 여기서 끝** |
-| `web/` | 데모 화면 | 디자인, 스키마 바뀌면 표시 부분 |
-| `app/services/` | 기능 로직 | 새 변수, 새 기능, 파라미터 |
-| `app/routes/` | API 주소와 입력 형식 | 새 기능, 새 입력 필드 |
+| `app/services/` | 기능 로직 (파일 이름 = 기능 이름) | 새 변수, 새 기능, 파라미터 |
+| `app/routes/` | API 주소와 입력 형식 (파일 이름 = 기능 이름) | 새 기능, 새 입력 필드 |
+| `app/stores/` | SQLite 저장소 (상대·기록, 리허설 세션) | 거의 없음 |
 | `app/hcx/` | HCX 호출 | 거의 없음 (API 사양이 다를 때만) |
 | `app/main.py` | 라우터 등록 | 새 기능 추가 시 1줄 |
 
@@ -84,15 +83,15 @@
 |---|---|---|
 | 1 | `routes/coach.py` `post_coach()` | `CoachRequest`로 입력 검사 (글자 수 등) |
 | 2 | `services/coach.py` `coach()` | 아래 3~6을 순서대로 호출 |
-| 3 | `services/common.py` `find_contact()` | contact_id → DB에서 상대 찾기 (없으면 404) |
-| 4 | `services/common.py` `prepare()` | ① `base_values()`: domain.yaml에서 관계·목적·격식 꺼내 변수 dict 생성 ② 상대 있으면 `{memory}` 채움 ③ `knowledge.search()`로 `{references}` 채움 |
+| 3 | `services/shared.py` `find_contact()` | contact_id → DB에서 상대 찾기 (없으면 404) |
+| 4 | `services/shared.py` `build_prompt_values()` | ① `domain_values()`: domain.yaml에서 관계·목적·격식 꺼내 변수 dict 생성 ② 상대 있으면 `{memory}` 채움 ③ `knowledge.search()`로 `{references}` 채움 |
 | 5 | `customize.py` `prompt("coach", **values)` | `prompts/coach.md` 읽고 `{변수}` 채움 |
 | 6 | `hcx/client.py` `chat_json()` | HCX-007 Structured Outputs 호출 → JSON 검증 → 사용량 기록 |
-| 7 | `services/highlight.py` `locate_spans()` | `issues[].quote`를 원문에서 찾아 `start/end` 추가 |
-| 8 | `services/common.py` `remember()` | 상대 있으면 이번 기록 DB 저장 |
+| 7 | `services/coach_highlight.py` `locate_spans()` | `issues[].quote`를 원문에서 찾아 `start/end` 추가 |
+| 8 | `services/shared.py` `save_interaction()` | 상대 있으면 이번 기록 DB 저장 |
 | 9 | → 응답 | `{original, scores, issues, revised, summary, references, meta}` |
 
-**다른 기능도 모양이 같습니다.** `prepare()` → `prompt()` → `hcx.chat_json()` → (후처리) → `remember()`.
+**다른 기능도 모양이 같습니다.** `build_prompt_values()` → `prompt()` → `hcx.chat_json()` → (후처리) → `save_interaction()`.
 작성(`compose.py`)은 7번이 없고, 해석(`interpret.py`)은 앞에 `read_image()`가 붙고, 리허설은 대화 중엔 `chat()`·끝날 때 `chat_json()`을 씁니다.
 
 ---
@@ -108,13 +107,12 @@
 | 목적 선택지 | `customize/domain.yaml` | `purposes:` |
 | 격식 단계 | `customize/domain.yaml` | `formality_levels:` (관계의 `formality`가 이 id를 가리킴) |
 | 리허설 시나리오 | `customize/domain.yaml` | `scenarios:` (`opening` 쓰면 AI가 먼저 말함) |
-| 참고 자료 개수, 기억할 기록 수, 리허설 기억 길이 | `customize/domain.yaml` | `settings:` (`rag_top_k`, `memory_recent`, `rehearsal_window`) |
+| 참고 자료 개수, 기억할 기록 수, 리허설 기억 길이 | `customize/domain.yaml` | `settings:` (`knowledge_top_k`, `memory_recent`, `rehearsal_window`) |
 | AI 지시문 | `customize/prompts/{기능}.md` | 전체. 맨 위 `<!-- -->`는 메모(모델에 안 감) |
 | AI 결과에 필드 추가 | `customize/schemas/{기능}.json` | `properties`에 추가, 필수면 `required`에도 |
 | 참고 자료 | `customize/knowledge/새파일.md` | `## 제목` 하나 = 검색 단위 하나 |
 | 모델 바꾸기 | `.env` | `MODEL_ANALYSIS`, `MODEL_VISION`, `MODEL_LIGHT` |
 | 한도 | `.env` | `MAX_LIVE_CALLS`, `TOKEN_STOP_THRESHOLD`, `CACHE_TTL_SECONDS` |
-| 색상 | `web/style.css` | 맨 위 `:root { --primary ... }` |
 
 > customize 파일은 **저장하면 바로 반영**됩니다 (서버 재시작 불필요). `.env`와 `.py` 파일은 재시작이 필요합니다 (`start.ps1`은 `--reload`라 `.py`는 자동 재시작).
 
@@ -122,15 +120,14 @@
 
 | 바꾸고 싶은 것 | 파일 | 할 일 |
 |---|---|---|
-| 새 프롬프트 변수 `{x}` (모든 기능 공통) | `app/services/common.py` `base_values()` | return dict에 `"x": 값` 추가 |
+| 새 프롬프트 변수 `{x}` (모든 기능 공통) | `app/services/shared.py` `domain_values()` | return dict에 `"x": 값` 추가 |
 | 새 변수 (한 기능만) | `app/services/{기능}.py` | `values["x"] = 값`을 `prompt()` 호출 전에 추가 |
-| 관계 항목에 새 키 (예: `honorific`) | yaml에 키 추가 + `base_values()`에 `"relation_honorific": rel.get("honorific", EMPTY)` | |
+| 관계 항목에 새 키 (예: `honorific`) | yaml에 키 추가 + `domain_values()`에 `"relation_honorific": rel.get("honorific", EMPTY)` | |
 | temperature / max_tokens | `app/services/{기능}.py` | `chat_json(..., temperature=0.3, max_tokens=3000)` |
 | 요청에 새 입력 필드 (예: `deadline`) | `app/routes/{기능}.py` Request 클래스 + `services/{기능}.py` 인자 + 변수로 넘기기 | 3곳 |
-| 화면에 새 결과 필드 표시 | `web/app.js`의 `runCoach()` 등 | 템플릿 문자열에 `${esc(r.새필드)}` 추가 |
-| 기록(메모리)에 남길 내용 | `app/services/{기능}.py`의 `remember(...)` 마지막 인자 | |
+| 기록(메모리)에 남길 내용 | `app/services/{기능}.py`의 `save_interaction(...)` 마지막 인자 | |
 | 캐시 끄기 (매번 새 결과) | `chat_json(..., use_cache=False)` 또는 temperature > 0 | |
-| 자유 입력 분류 대상 기능 | `app/services/router.py` `FEATURES` + `prompts/route.md` | |
+| 자유 입력 분류 대상 기능 | `app/services/route.py` `FEATURES` + `prompts/route.md` | |
 
 ### 4-3. 거의 안 건드리는 것 (API 사양이 다를 때만)
 
@@ -183,15 +180,15 @@
 **③ 서비스** `app/services/quiz.py`
 ```python
 """퀴즈 생성."""
-from .common import meta, prepare
+from .shared import build_prompt_values, call_meta
 
 
 async def quiz(core, topic: str, relation: str | None = None) -> dict:
-    values, refs = await prepare(core, topic, relation)          # 변수 + 참고 자료
+    values, refs = await build_prompt_values(core, topic, relation)  # 변수 + 참고 자료
     system = core.customize.prompt("quiz", **values)             # quiz.md 채우기
-    result = await core.hcx.chat_json("quiz", system, topic,     # "quiz"는 토큰 탭에 보일 기능명
+    result = await core.hcx.chat_json("quiz", system, topic,     # "quiz"는 /api/usage에 보일 기능명
                                       core.customize.schema("quiz"))
-    return {**result.data, "references": refs, "meta": meta(result)}
+    return {**result.data, "references": refs, "meta": call_meta(result)}
 ```
 
 **④ 라우트** `app/routes/quiz.py`
@@ -219,16 +216,16 @@ async def post_quiz(body: QuizRequest, core: Core = Depends(get_core)):
 
 **⑤ 등록** `app/main.py`
 ```python
-from .routes import coach, contacts, domain, health, messages, quiz, rehearsal, system
+from .routes import coach, compose, contacts, domain, health, interpret, knowledge, quiz, rehearsal, route, usage
 ...
-    app.include_router(quiz.router)
+    app.include_router(quiz.router)        # POST /api/quiz
 ```
 
 **⑥ 확인**: http://127.0.0.1:8000/docs 에 `POST /api/quiz`가 생깁니다. MOCK 모드에서도 스키마대로 가짜 결과가 나옵니다.
 
-**⑦ 화면**: `web/index.html`에 탭 버튼과 `<section id="tab-quiz">` 추가, `web/app.js`에 `runQuiz()` 추가 (기존 `runCompose()` 복사).
+**⑦ 프론트**: 팀 프론트에서 `POST /api/quiz`를 호출하고 응답의 `questions`를 표시합니다.
 
-**⑧ 테스트** (선택): `tests/test_messages.py`의 `test_compose_mock...`을 복사해 주소만 바꾸기.
+**⑧ 테스트** (선택): `tests/test_compose.py`를 `tests/test_quiz.py`로 복사해 주소만 바꾸기.
 
 ---
 
@@ -247,7 +244,7 @@ from .routes import coach, contacts, domain, health, messages, quiz, rehearsal, 
 | `{references}` | knowledge 검색 결과 상위 k개 | compose, coach, interpret |
 | `{memory}` | 상대 프로필 + 최근 기록 | compose, coach, interpret, rehearsal_role |
 | `{ai_role}` `{scenario_title}` `{situation}` `{goal}` | 시나리오 항목 | rehearsal_role, rehearsal_feedback |
-| `{features}` | `router.py`의 FEATURES | route |
+| `{features}` | `services/route.py`의 FEATURES | route |
 
 - 값이 없으면 `(없음)`이 들어갑니다.
 - 프롬프트에 **목록에 없는 `{변수}`**를 쓰면 채워지지 않고 글자 그대로 남습니다 (오류는 안 남). → 프롬프트를 고친 뒤 결과가 이상하면 `{...}`가 그대로 갔는지 의심하세요.
@@ -259,27 +256,23 @@ from .routes import coach, contacts, domain, health, messages, quiz, rehearsal, 
 |---|---|---|---|---|---|
 | compose | compose.md | compose.json | HCX-007 | 0.5 | ✗ |
 | coach | coach.md | coach.json | HCX-007 | 0 | ✓ |
-| interpret | ocr.md → interpret.md | interpret.json | HCX-005 → HCX-007 | 0 | ✓ |
+| interpret | interpret_ocr.md → interpret.md | interpret.json | HCX-005 → HCX-007 | 0 | ✓ |
 | rehearsal 대화 | rehearsal_role.md | — | HCX-DASH-002 | 0.7 | ✗ |
 | rehearsal 종료 | rehearsal_feedback.md | rehearsal_feedback.json | HCX-007 | 0 | ✓ |
 | route | route.md | — | HCX-DASH-002 | 0 | ✓ |
-| RAG | — | — | 임베딩 v2 | — | ✓ + JSON 파일 |
+| knowledge (RAG) | — | — | 임베딩 v2 | — | ✓ + JSON 파일 |
 
 ### 6-3. 코드가 의존하는 스키마 필드 (이름을 바꾸면 같이 고칠 곳)
 
-필드를 **추가**하는 건 자유입니다. 아래 필드의 **이름을 바꾸거나 지우면** 오른쪽도 수정하세요.
+필드를 **추가**하는 건 자유입니다. 아래 필드의 **이름을 바꾸거나 지우면** 오른쪽 백엔드 코드도 수정하세요. 스키마 필드는 응답 JSON에 그대로 들어가므로, 프론트에서 읽는 이름도 같이 바뀝니다.
 
-| 스키마 | 필드 | 백엔드 의존 | 화면(web/app.js) 의존 |
-|---|---|---|---|
-| coach.json | `issues[].quote` | `coach.py`, `highlight.py` (하이라이트 위치 계산) | `highlight()`, `runCoach()` |
-| coach.json | `revised` | `coach.py` (메모리 기록) | `runCoach()` 전후 비교 |
-| coach.json | `scores.*`, `summary`, `issues[].problem/suggestion/severity` | — | `runCoach()` |
-| compose.json | `draft` | `compose.py` (메모리 기록) | `runCompose()` |
-| compose.json | `notes` | — | `runCompose()` |
-| interpret.json | `intent` | `interpret.py` (메모리 기록) | `runInterpret()` |
-| interpret.json | `emotion`, `urgency`, `key_points`, `reply_draft` | — | `runInterpret()` |
-| rehearsal_feedback.json | `summary` | `rehearsal.py` (메모리 기록) | `endRehearsal()` |
-| rehearsal_feedback.json | `overall_score`, `scores.*`, `goal_achieved`, `good_points`, `improvements[]` | — | `endRehearsal()` |
+| 스키마 | 필드 | 백엔드 의존 |
+|---|---|---|
+| coach.json | `issues[].quote` | `coach.py`, `coach_highlight.py` (하이라이트 위치 계산) |
+| coach.json | `revised` | `coach.py` (메모리 기록) |
+| compose.json | `draft` | `compose.py` (메모리 기록) |
+| interpret.json | `intent` | `interpret.py` (메모리 기록) |
+| rehearsal_feedback.json | `summary` | `rehearsal.py` (메모리 기록) |
 
 ### 6-4. 스키마 작성 규칙 (HCX-007 Structured Outputs)
 
@@ -336,7 +329,7 @@ from .routes import coach, contacts, domain, health, messages, quiz, rehearsal, 
 
 **구현 (반나절)**
 - [ ] `.env` 키 입력 → `smoke_test.py` 통과
-- [ ] `Select-String -Path customize\*, customize\*\*, web\* -Pattern "TODO\(DAY-OF\)"`로 채울 곳 확인
+- [ ] `Select-String -Path customize\*, customize\*\* -Pattern "TODO\(DAY-OF\)"`로 채울 곳 확인
 - [ ] domain.yaml: 관계·목적·시나리오 채우기
 - [ ] prompts: 기능별 지시문 작성 (프롬프트 담당 원고 붙여 넣기)
 - [ ] knowledge: 자료 넣기 → `/api/knowledge/search`로 검색 확인
@@ -344,7 +337,7 @@ from .routes import coach, contacts, domain, health, messages, quiz, rehearsal, 
 
 **점검 (2시간)**
 - [ ] 대표 입력 3개씩: 잘 되는 것 / 애매한 것 / 실패하는 것
-- [ ] 토큰 탭에서 기능별 사용량 확인
+- [ ] `GET /api/usage`로 기능별 사용량 확인
 - [ ] `pytest -q` 통과 확인
 
 **시연 준비**
@@ -356,8 +349,8 @@ from .routes import coach, contacts, domain, health, messages, quiz, rehearsal, 
 
 ## 9. 내가 직접 익혀 두면 좋은 순서
 
-1. `customize/` 파일 고치고 화면에서 결과 바뀌는 것 확인 (코드 0줄)
+1. `customize/` 파일 고치고 /docs(Swagger)에서 결과 바뀌는 것 확인 (코드 0줄)
 2. `app/services/compose.py` 읽기 (13줄, 기능 하나의 전체 흐름)
-3. `app/services/common.py`의 `base_values()`에 변수 하나 추가해 보기
+3. `app/services/shared.py`의 `domain_values()`에 변수 하나 추가해 보기
 4. 5장 따라 "퀴즈" 기능 직접 추가해 보기 (연습 후 삭제)
 5. `app/hcx/client.py`의 `chat_json()` 읽기 (HCX 요청이 어떻게 생기는지)
