@@ -1,4 +1,4 @@
-# 개발 서버 실행: venv 생성 → 패키지 설치 → .env 준비 → uvicorn
+﻿# 개발 서버 실행: venv 생성 → 패키지 설치 → .env 준비 → uvicorn
 # 사용: powershell -ExecutionPolicy Bypass -File scripts\start.ps1 [-Port 8000] [-NoReload]
 param(
     [int]$Port = 8000,
@@ -22,8 +22,12 @@ if (-not (Test-Path ".env")) {
 }
 
 # 필요한 패키지가 없을 때만 설치 (첫 실행은 인터넷 필요)
+# PowerShell 5.1은 Stop 상태에서 native 명령의 stderr를 오류로 보고 멈추므로 이 확인만 Continue로 실행
+$ErrorActionPreference = "Continue"
 & $py -c "import fastapi, uvicorn, httpx, dotenv, yaml, multipart, PIL, jsonschema" 2>$null
-if ($LASTEXITCODE -ne 0) {
+$installed = ($LASTEXITCODE -eq 0)
+$ErrorActionPreference = "Stop"
+if (-not $installed) {
     & $py -m pip install -r requirements.txt
     if ($LASTEXITCODE -ne 0) { throw "패키지 설치 실패" }
 }
